@@ -5,18 +5,36 @@ class Cart
     private array items = [];
     private float subTotal;
 
-    public function addProductToCart(int $productId, int $quantity) : string 
+    public function addProductToCart(int $productId, int $quantity, array $products) : string 
     {
-        $product = getProduct();
-        bool result = validateProductStockQuantity($product, $quantity);
+        var $dynamicResult = validateExistingProduct($productId, $products)
+        if ($dynamicResult == false)
+            return "Produto Inexistente"
 
-        if (!result)
-            return "Não foi possível adicionar o produto {$product.getName()} no carrinho"
+        $product = getProduct($dynamicResult, $products);
+        bool $result = validateProductStockQuantity($product, $quantity);
+
+        if (!$result)
+            return "Não foi possível adicionar o produto {$product.getName()} no carrinho, quantidade inválida. \n Quantidade pedida: {$quantity} \n Estoque do produto: {$product.getQuantity()}"
 
         $product.getQuantity() -= $quantity;
-        $this->items
+        $this->items[] = ["productId" => $productId, "product" => $product, "quantity" => $quantity]
+
         $this->subTotal += $product.getPrice() * $quantity;
         return "Produto {$product.getName()} adicionado no carrinho!"
+    }
+
+    public function removeProductFromCart(int $productId) : string
+    {
+        $index = array_search($productId, array_column($this->items, "productId"), true);
+
+        if ($index !== false)
+        {
+            unset($this->items[$index]);
+            return "Produto removido com sucesso!"
+        }
+
+        return "Id inexistente"
     }
 
     public function validateExistingProduct(int $productId, array $products) : int|false
