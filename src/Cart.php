@@ -2,57 +2,72 @@
 
 class Cart
 {
-    private array items = [];
-    private float subTotal;
+    private array $items = [];
+    private float $subTotal = 0.0;
+    private const DISCOUNT_COUPON = 0.10;
 
     public function addProductToCart(int $productId, int $quantity, array $products) : string 
     {
-        var $dynamicResult = validateExistingProduct($productId, $products)
-        if ($dynamicResult == false)
-            return "Produto Inexistente"
+        $product = $this->getProduct($productId, $products);
 
-        $product = getProduct($dynamicResult, $products);
-        bool $result = validateProductStockQuantity($product, $quantity);
+        if (!$product) 
+        {
+            return "Produto Inexistente <br>";
+        }
 
-        if (!$result)
-            return "Não foi possível adicionar o produto {$product.getName()} no carrinho, quantidade inválida. \n Quantidade pedida: {$quantity} \n Estoque do produto: {$product.getQuantity()}"
+        if (!$this->validateProductStockQuantity($product, $quantity)) 
+        {
+            return "Não foi possível adicionar o produto {$product->getName()} no carrinho, quantidade inválida.<br>Quantidade pedida: {$quantity}<br>Estoque do produto: {$product->getStock()} <br><br>";
+        }
 
-        $product.getQuantity() -= $quantity;
-        $this->items[] = ["productId" => $productId, "product" => $product, "quantity" => $quantity]
+        $product->setStock($product->getStock() - $quantity);
 
-        $this->subTotal += $product.getPrice() * $quantity;
-        return "Produto {$product.getName()} adicionado no carrinho!"
+        $this->items[] = ["productId" => $productId, "product" => $product, "quantity" => $quantity];
+
+        $this->subTotal += $product->getPrice() * $quantity;
+
+        return "Produto {$product->getName()} adicionado no carrinho! <br>";
     }
 
     public function removeProductFromCart(int $productId) : string
     {
         $index = array_search($productId, array_column($this->items, "productId"), true);
 
-        if ($index !== false)
-        {
+        if ($index !== false) {
+            $product = $this->items[$index]["product"];
+            $product->setStock($product->getStock() + $this->items[$index]["quantity"]);
+
             unset($this->items[$index]);
-            return "Produto removido com sucesso!"
+            return "Produto removido com sucesso! <br><br>";
         }
 
-        return "Id inexistente"
+        return "Id inexistente <br>";
     }
 
-    public function validateExistingProduct(int $productId, array $products) : int|false
+    private function getProduct(int $productId, array $products) : ?Product
     {
-        return array_search($productId, array_column($products, "id"), true);
+        foreach ($products as $product) {
+            if ($product->getId() === $productId) {
+                return $product;
+            }
+        }
+        return null;
     }
 
-    public function getProduct(int $index, array $products) : Product
+    private function validateProductStockQuantity(Product $product, int $quantity) : bool
     {
-        return $products[$index];
+        return $quantity > 0 && $quantity <= $product->getStock();
     }
 
-    public function validateProductStockQuantity(Product $product, int $quantity) : bool
+    public function getSubTotal() : float
     {
-        if ($quantity <= 0 | $quantity > $product.getQuantity())
-            return false;
+        $this->subTotal * (1 - self::DISCOUNT_COUPON);
+        return $this->subTotal;
+    }
 
-        return true;
+    public function getItems() : array
+    {
+        return $this->items;
     }
 }
 ?>

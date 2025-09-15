@@ -35,15 +35,20 @@ class Product
 
     public function generateSimulatedProducts() : array
     {
-        $products = [
+        $productsData = [
             ["id" => 1, "name" => "Prato", "price" => 29.90, "stock" => 10],
             ["id" => 2, "name" => "Copo", "price" => 16.90, "stock" => 15],
-            ["id" => 3, "name" => "Talheres", "price" => 39.90, "stock" => 20]
+            ["id" => 3, "name" => "Talheres", "price" => 39.90, "stock" => 5]
         ];
+
+        $products = [];
+
+        foreach ($productsData as $p) {
+            $products[] = new Product($p['id'], $p['name'], $p['price'], $p['stock']);
+        }
 
         return $products;
     }
 } 
-
 
 ?>
